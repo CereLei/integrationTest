@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+        <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+    <title>Document</title>
+</head>
+<body>
+    <div class="allCon" style="width: 70%;margin: 0 auto;margin-top: 60px;">
+        <h1 style="text-align: center;">Node实现数据增删改查</h1>
+        <!--新增-->
+        <form class="initform" method="post" accept-charset="utf-8">
+            <div class="from-group">
+                <label>输入内容</label>
+                <input class="form-control createContent" type="text" name="content" placeholder="Enter Todo" />
+            </div>
+            <div class="from-group" style="margin: 10px 0px;">
+                <button type="button" class="btn btn-info" onclick="ceateItem()">新增</button>
+            </div>
+        </form>
+        <!--编辑/保存表格-->
+        <form class="cerateform" method="post" accept-charset="utf-8">
+            <div class="from-group">
+                <label>更改内容</label>
+                <input class="form-control upContent" type="text" name="content" placeholder="Enter Todo" />
+            </div>
+            <input class="form-control upid" style="display:none" type="text" name="_id" placeholder="Enter Todo" />
+
+            <button type="button" class="btn btn-success" style="margin: 10px 0px;" onclick="updateItem()">Save</button>
+        </form>
+        <button class="btn btn-default" id="btn" onclick="searchItem()">查询全部</button>
+        <hr>
+        <!--显示数据库信息-->
+        <div class="content" onclick="editItem()" style="margin-top: 10px;"></div>
+    </div>
+</body>
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="http://cdn.bootcss.com/jquery/1.11.1/jquery.min.js"></script>
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="http://cdn.bootcss.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+    <script>
+        var global = {};
+        $(".cerateform").hide();
+        //查询全部数据
+        function searchItem() {
+            $(".content").empty();
+            $.get('http://localhost:3000/search', function (res) {
+                console.log(res);
+                for (var i = 0; i < res.length; i++) {
+                    $(".content").append(`
+                     <div id="lists" class="alert alert-success" click="edit(event)" style="padding: 0;height: 50px;line-height: 50px;padding-left: 10px;">
+                     <p  style="width: 90%;display: inline-block;" id="${res[i]._id}" >${res[i].content}</p>
+                    <p class="pdelete" title="删除该数据" style=" display: inline-block;">
+                        <button type="button" class="close"><span aria-hidden="true" onclick="deleteItem()"  nodeValue="${res[i]._id}">&times;</span><span class="sr-only">Close</span></button>
+                    </p>
+                </div>
+                     `)
+                }
+            })
+        }
+        //创建数据
+        function ceateItem() {
+            var obj = {};
+            obj.content = $('.createContent').val();
+            if (obj.content != '') {
+                $.post('http://localhost:3000/create', obj, function (res) {
+                    console.log('新增成功');
+                    searchItem();
+                })
+            } else {
+                alert('不能为空');
+            }
+        }
+        //查询单个数据
+        function editItem() {
+            if (event.target.nodeName == 'P') {
+                var id = event.target.id;
+                $.get('http://localhost:3000/edit?id=' + id, function (res) {
+                    $('.cerateform').show();
+                    $('.initform').hide();
+                    $('.upContent').val(res.content);
+                    $('.upid').val(res._id);
+                })
+            }
+        }
+        //更新数据
+        function updateItem() {
+            var obj = {};
+            obj.content = $('.upContent').val();
+            obj._id = $('.upid').val();
+            if (obj.content != '') {
+                $.post('http://localhost:3000/update', obj, function (res) {
+                    console.log('成功');
+                    searchItem();
+                    $('.cerateform').hide();
+                    $('.initform').show();
+                })
+            } else {
+                alert('不能为空');
+            }
+        }
+        //删除数据
+        function deleteItem() {
+            var id = event.target.attributes[2].nodeValue;
+            $.get('http://localhost:3000/destroy?id=' + id, function (res) {
+                console.log(res);
+                searchItem();
+            })
+        }
+    </script>
+</html>
